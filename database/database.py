@@ -1,3 +1,5 @@
+import asyncio
+
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import select, exists
@@ -17,7 +19,7 @@ class Base(DeclarativeBase):
 
 
 async def initialize_groups() -> None:
-    from models import Group
+    from database.models import Group
     async with SessionLocal() as session:
         for name in GroupNames:
             stmt = select(exists().where(Group.name == name))
@@ -29,8 +31,15 @@ async def initialize_groups() -> None:
         await session.commit()
 
 
+# TODO
+async def initialize_subjects() -> None:
+    pass
+
+
 engine = create_async_engine("sqlite+aiosqlite:///file_exchanger.db")
 SessionLocal = async_sessionmaker(bind=engine,class_=AsyncSession, expire_on_commit=False, autoflush=False)
+
+
 
 
 async def init_db() -> None:
@@ -38,7 +47,6 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     await initialize_groups()
-
 
 # if __name__ == "__main__":
 #     asyncio.run(init_db())
