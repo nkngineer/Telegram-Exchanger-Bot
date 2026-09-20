@@ -56,7 +56,7 @@ async def edit_user_name(message: Message, state: FSMContext):
     await message.answer("Фамилия и имя записаны. ")
 
 
-    await message.answer("Выберите группу", reply_markup=group_menu())
+    await message.answer("Выберите группу", reply_markup=await group_menu())
     await state.set_state(Text.waiting_user_group)
 
 
@@ -100,3 +100,5 @@ async def upload_file_from_user(message: Message, state: FSMContext):
 
     await state.clear()
     await message.answer("Файл получен")
+
+
