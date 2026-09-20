@@ -1,12 +1,12 @@
 from database.database import SessionLocal
-from models import Work, Student, Group
+from database.models import Work, Student, Group
 from pathlib import Path
 from sqlalchemy import select, exists
 
 
 
 
-async def documentToBinary(file_path : Path) -> bytes:
+async def document_to_binary(file_path : Path) -> bytes:
     with open(file_path, "rb") as file:
         binary_data = file.read()
 
@@ -73,6 +73,10 @@ async def add_user(username: str, telegram_id: int) -> None:
 
 
 
+async def group_menu() -> None:
+    async with SessionLocal() as session:
+        groups = (await session.scalars(select(Group.name))).all()
+        print(groups)
 
 
 
@@ -86,8 +90,9 @@ async def set_user_group(callback_data: str|None, telegram_id: int) -> None:
 
 
 async def add_work(subject_id: int, file_path: Path) -> None:
-    data = await documentToBinary(file_path)
+    data = await document_to_binary(file_path)
     async with SessionLocal() as session:
         work = Work(subject_id=subject_id, file=data)
         session.add(work)
         await session.commit()
+
