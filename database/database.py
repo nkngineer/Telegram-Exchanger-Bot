@@ -13,12 +13,21 @@ class GroupNames(StrEnum):
     group_35 = "09c35",
     group_41 = "09c41",
 
+
+class SubjectNames(StrEnum):
+    pass
+
+
 class Base(DeclarativeBase):
     pass
 
 
 
 async def initialize_groups() -> None:
+    """
+    Initialize groups in the database with missing rows from GroupNames
+    :return: None
+    """
     from database.models import Group
     async with SessionLocal() as session:
         for name in GroupNames:
@@ -33,6 +42,10 @@ async def initialize_groups() -> None:
 
 # TODO
 async def initialize_subjects() -> None:
+    """
+    Initialize subjects in the database with missing rows from SubjectNames
+    :return: None
+    """
     pass
 
 
