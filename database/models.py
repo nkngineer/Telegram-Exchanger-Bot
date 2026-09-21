@@ -50,11 +50,12 @@ class Student(Base):
     __tablename__ = "student"
 
     id : Mapped[int] = mapped_column(primary_key=True)
+    corporate_id : Mapped[int]
     telegram_id : Mapped[int]
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"),nullable=True)
-    first_name: Mapped[str]
+    # first_name: Mapped[str]
     # surname: Mapped[str]
-    last_name: Mapped[str]
+    # last_name: Mapped[str]
 
 
 

@@ -18,8 +18,10 @@ class Upload(StatesGroup):
 
 
 class Text(StatesGroup):
-    waiting_username = State()
+    # waiting_username = State()
     waiting_user_group = State()
+    waiting_user_id = State()
+
 
 main_router = Router()
 
@@ -33,52 +35,78 @@ async def start_message(message: Message):
 
 @main_router.message(CommandStart())
 async def authorization_user(message: Message, state: FSMContext):
-    user_id = message.from_user.id
+    telegram_user_id = message.from_user.id
 
-    is_authorized = await check_user_authorization(user_id)
-    print("функция приветствия")
-    if is_authorized == False:
-        await message.answer("Вы не авторизованы. Введите свои фамилию и имя")
-        await state.set_state(Text.waiting_username)
+    is_authorized = await check_user_authorization(telegram_user_id)
+    print(f"Статус авторизации для {telegram_user_id}: {is_authorized}") # Полезный лог
+    if not is_authorized:
+        await message.answer("Вы не авторизованы. Выберите группу",reply_markup=await group_menu())
+        await state.set_state(Text.waiting_user_group)
+        return
 
-    if is_authorized:
-        await start_message(message)
-
-
-@main_router.message(Text.waiting_username, F.text)
-async def edit_user_name(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    print("функция ожидания ввода имени от пользователя")
-    user_answer = message.text
-
-    await state.update_data(waiting_username=user_answer)
-    await add_user(user_answer,user_id)
-    await message.answer("Фамилия и имя записаны. ")
+    await start_message(message)
 
 
-    await message.answer("Выберите группу", reply_markup=await group_menu())
-    await state.set_state(Text.waiting_user_group)
 
-
-# TODO
+# TODO: сделать авторизацию по id перед выбором группы
 @main_router.callback_query(Text.waiting_user_group,F.data)
 async def edit_user_group(callback: CallbackQuery, state: FSMContext):
     telegram_id = callback.from_user.id
+
     is_group_exist = await check_group(callback.data)
     if not is_group_exist: await callback.answer(text="Такой группы нет!")
     else:
-        await set_user_group(callback.data,telegram_id)
-        await state.clear()
-        await callback.message.edit_text(text=f"Группа {callback.data} выбрана!")
-        if await check_user_authorization(telegram_id): await start_message(callback.message)
+        # await set_user_group(callback.data,telegram_id)
+        await callback.message.edit_text(text=f"Группа {callback.data} выбрана!") # ???
+
+        await state.update_data(waiting_user_group=callback.data)
+
+
+        # TODO: добавить пример
+        await callback.message.answer(text="Введите id вашей корпоративной почты / зачетки.\nНапример - для p09s3428@voenmeh.ru id будет 28")
+        await state.set_state(Text.waiting_user_id)
+
+        # await edit_user_id(callback.message, state)
+
+
+
+
+# TODO
+@main_router.message(Text.waiting_user_id, F.text)
+async def edit_user_id(message: Message, state: FSMContext):
+    user_telegram_id = message.from_user.id
+
+    print("функция ожидания ввода id от пользователя")
+    corporate_id : int = int(message.text)
+
+
+    # await state.update_data(waiting_username=corporate_id)
+
+    state_data : dict[str,int] = await state.get_data()
+    group_name : str = state_data.get("waiting_user_group")
+
+    await add_user(user_telegram_id, corporate_id, group_name)
+
+    await message.answer("id записан. ")
+
+
+    await state.clear()
+    if await check_user_authorization(user_telegram_id): await authorization_user(message, state)
+
+
+
+
+
 
 
 # TODO: добавить IKB с изменением данных профиля
 @main_router.callback_query(F.data == "get_user_profile")
 async def get_user_profile(callback: CallbackQuery):
     telegram_id = callback.from_user.id
-    user_first_name , user_last_name , user_group = await check_user_profile(telegram_id)
-    await callback.message.answer(text=f"Имя : {user_first_name}\nФамилия : {user_last_name}\nГруппа : {user_group}")
+    corporate_id , uset_group_name  = await check_user_profile(telegram_id)
+    await callback.message.answer(text=f"Ваш id : {corporate_id}\nГруппа : {uset_group_name}")
+
+
 
 
 @main_router.message(Command("get_file"))
