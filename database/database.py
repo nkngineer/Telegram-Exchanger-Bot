@@ -9,13 +9,15 @@ from enum import StrEnum
 
 class GroupNames(StrEnum):
     group_33 = "09c33"
-    group_34 = "09c34",
-    group_35 = "09c35",
-    group_41 = "09c41",
+    group_34 = "09c34"
+    group_35 = "09c35"
+    group_41 = "09c41"
 
 
 class SubjectNames(StrEnum):
-    pass
+    first_subject = "ВНЕДРЕНИЕ ИС"
+    second_project = "УПР. и АВТ. БД"
+    third_project = "ОСНОВЫ СТАНД. и СЕРТ."
 
 
 class Base(DeclarativeBase):
@@ -40,19 +42,22 @@ async def initialize_groups() -> None:
         await session.commit()
 
 
-# TODO
 async def initialize_subjects() -> None:
-    """
-    Initialize subjects in the database with missing rows from SubjectNames
-    :return: None
-    """
-    pass
+    from database.models import Subject
+    async with SessionLocal() as session:
+        for name in SubjectNames:
+            stmt = select(exists().where(Subject.name == name))
+            is_exists = await session.scalar(stmt)
+            if is_exists:
+                continue
+            subject = Subject(name=name)
+            session.add(subject)
+        await session.commit()
+
 
 
 engine = create_async_engine("sqlite+aiosqlite:///file_exchanger.db")
-SessionLocal = async_sessionmaker(bind=engine,class_=AsyncSession, expire_on_commit=False, autoflush=False)
-
-
+SessionLocal = async_sessionmaker(bind = engine,class_ = AsyncSession, expire_on_commit = False, autoflush = False)
 
 
 async def init_db() -> None:
@@ -60,6 +65,7 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     await initialize_groups()
+    await initialize_subjects()
 
 # if __name__ == "__main__":
 #     asyncio.run(init_db())
