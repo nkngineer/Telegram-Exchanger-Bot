@@ -1,9 +1,7 @@
 from database.database import SessionLocal
-from database.models import Work, Student, Group
+from database.models import Work, Student, Group, Subject, Task
 from pathlib import Path
-from sqlalchemy import select, exists
-
-
+from sqlalchemy import select, exists, Row
 
 
 async def document_to_binary(file_path : Path) -> bytes:
@@ -43,16 +41,13 @@ async def check_user_profile(telegram_id: int) -> tuple[int,str] | None:
     :note: open its own session via SessionLocal() .join() students
     """
     async with SessionLocal() as session:
-
         stmt = (
             select(Student.corporate_id, Group.name)
             .join(Group, Group.id == Student.group_id)
             .where(Student.telegram_id == telegram_id)
         )
 
-
         result = await session.execute(stmt)
-
         user_data : tuple[int,str] = result.tuples().fetchone()
 
         return user_data
@@ -60,27 +55,34 @@ async def check_user_profile(telegram_id: int) -> tuple[int,str] | None:
 
 
 
-# async def ensure_user_registered(username: str, telegram_id: int) -> None:
-#     """
-#     Check if a user with the given user first and last name exists.
-#
-#     :param username:
-#     :param telegram_id:
-#     :raises ValueError: If a student with the same name already exists.
-#     :return: None or ValueError
-#     :note: open its own session via SessionLocal() .join() students and check first and last name in the database
-#     """
-#     async with SessionLocal() as session:
-#         all_name = username.split()
-#         first_name = all_name[0]
-#         last_name = all_name[1]
-#         stmt = select(exists().where(Student.first_name == first_name, Student.last_name == last_name))
-#         is_exists = await session.scalar(stmt)
-#         if not is_exists:
-#             await authorize_user(username, telegram_id)
-#         else:
-#             raise ValueError("Пользователь уже существует")
+async def get_subjects() -> list[Row[tuple[int, str]]]:
+    async with SessionLocal() as session:
+        stmt = select(Subject.id, Subject.name).order_by(Subject.name)
+        return (await session.execute(stmt)).all()
 
+
+
+async def get_groups() -> list[Row[tuple[int, str]]]:
+    async with SessionLocal() as session:
+        stmt = select(Group.id, Group.name).order_by(Group.name)
+        return (await session.execute(stmt)).all()
+
+
+
+# TODO
+async def get_works(callback_lesson_id : str) -> list[Row[tuple[int, str]]]:
+    # callback_lesson_id: subject_{subject.id}
+    async with SessionLocal() as session:
+        stmt = select(Work.id, Work.name).order_by(Work.name)
+        return (await session.execute(stmt)).all()
+
+
+
+async def check_lessons() -> tuple[str, ...]:
+    async with SessionLocal() as session:
+        stmt = select(Subject.name)
+        result = await session.execute(stmt)
+        return tuple(result.scalars().all())
 
 
 async def check_user_authentication(telegram_id: int) -> bool:
@@ -107,11 +109,17 @@ async def register_user(telegram_id : int, corporate_id : int, group_name: str) 
     """
     async with SessionLocal() as session:
         group_id = await session.scalar(select(Group.id).where(Group.name == group_name))
-        student = Student(corporate_id=corporate_id, telegram_id=telegram_id, group_id = group_id)
+        stmt = select(Student).where(Student.telegram_id == telegram_id)
+        student = await session.scalar(stmt)
 
-        session.add(student)
+        if student:
+            student.corporate_id = corporate_id
+            student.group_id = group_id
+        else:
+            student = Student(corporate_id = corporate_id, telegram_id = telegram_id, group_id = group_id)
+            session.add(student)
+
         await session.commit()
-
 
 
 async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
@@ -132,7 +140,7 @@ async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
         if group is None:
             raise ValueError(f"Группа {callback_data!r} не найдена")
         if user is None:
-            raise ValueError(f"Студент с telegram_id={telegram_id} не найден")
+            raise ValueError(f"Студент с telegram_id = {telegram_id} не найден")
         user.group_id = group.id
         await session.commit()
 
@@ -148,7 +156,7 @@ async def insert_work(subject_id: int, file_path: Path) -> None:
     """
     data = await document_to_binary(file_path)
     async with SessionLocal() as session:
-        work = Work(subject_id=subject_id, file=data)
+        work = Work(subject_id = subject_id, file = data)
         session.add(work)
         await session.commit()
 
