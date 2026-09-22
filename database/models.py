@@ -6,21 +6,20 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey
 
 
-
-
 class Work(Base):
     __tablename__ = "work"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key = True)
+    name : Mapped[str]
     subject_id: Mapped[int] = mapped_column(ForeignKey("subject.id"))
-    file: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
+    file: Mapped[bytes] = mapped_column(LargeBinary, deferred = True)
 
 
 
 class Subject(Base):
     __tablename__ = "subject"
 
-    id : Mapped[int] = mapped_column(primary_key=True)
+    id : Mapped[int] = mapped_column(primary_key = True)
     name : Mapped[str]
 
 
@@ -28,22 +27,18 @@ class Subject(Base):
 class Group(Base):
     __tablename__ = "group"
 
-    id : Mapped[int] = mapped_column(primary_key=True)
+    id : Mapped[int] = mapped_column(primary_key = True)
     name : Mapped[str]
-
-
-
 
 
 class Task(Base):
     __tablename__ = "task"
 
-    id : Mapped[int] = mapped_column(primary_key=True)
-    created_at : Mapped[datetime] = mapped_column(default=datetime.now())
+    id : Mapped[int] = mapped_column(primary_key = True)
+    created_at : Mapped[datetime] = mapped_column(default = datetime.now())
     ended_at : Mapped[datetime]
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
     work_id: Mapped[int] = mapped_column(ForeignKey("work.id"))
-
 
 
 class Student(Base):
@@ -52,20 +47,15 @@ class Student(Base):
     id : Mapped[int] = mapped_column(primary_key=True)
     corporate_id : Mapped[int]
     telegram_id : Mapped[int]
-    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"),nullable=True)
-    # first_name: Mapped[str]
-    # surname: Mapped[str]
-    # last_name: Mapped[str]
-
-
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"),nullable = True)
 
 
 class StudentTaskCompleted(Base):
     __tablename__ = "student_task_completed"
 
-    id : Mapped[int] = mapped_column(primary_key=True)
+    id : Mapped[int] = mapped_column(primary_key = True)
     telegram_id : Mapped[int]
     task_id : Mapped[int] = mapped_column(ForeignKey("task.id"))
     student_id : Mapped[int] = mapped_column(ForeignKey("student.id"))
-    file: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
+    file: Mapped[bytes] = mapped_column(LargeBinary, deferred = True)
+    created_at: Mapped[datetime] = mapped_column(default = datetime.now())
