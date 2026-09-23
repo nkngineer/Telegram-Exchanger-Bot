@@ -36,6 +36,7 @@ async def group_menu() -> InlineKeyboardMarkup:
 
 async def profile_menu() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardBuilder()
+    ikb.add(InlineKeyboardButton(text="Изменить id",callback_data="change_id"))
     ikb.add(InlineKeyboardButton(text="Назад",callback_data = "main_menu"))
     ikb.adjust(1)
     return ikb.as_markup()

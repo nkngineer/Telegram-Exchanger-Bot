@@ -37,6 +37,13 @@ async def start_message(message: Message) -> None:
     await message.answer(text = "Бот по загрузке лаб", reply_markup = main_menu())
 
 
+async def edit_start_message(message: Message) -> None:
+    """
+    Handle the start message and show the main menu
+    """
+    await message.edit_text(text = "Бот по загрузке лаб", reply_markup = main_menu())
+
+
 @main_router.message(CommandStart())
 async def authentication_user(message: Message, state: FSMContext) -> None:
     """
@@ -77,7 +84,7 @@ async def edit_user_group(callback: CallbackQuery, state: FSMContext) -> None:
 
 
         await callback.message.answer(text = "Введите id вашей корпоративной почты / зачетки.\n"
-                                             "Например - для p09s3452@voenmeh.ru id будет 52")
+                                                "Например - для p09s3452@voenmeh.ru id будет 52")
         await state.set_state(Text.waiting_user_id)
 
         # await edit_user_id(callback.message, state)
@@ -91,7 +98,17 @@ async def output_lesson_menu(callback: CallbackQuery) -> None:
 
 @main_router.callback_query(F.data == "main_menu")
 async def output_lesson_menu(callback: CallbackQuery) -> None:
-    await start_message(callback.message)
+    await edit_start_message(callback.message)
+
+
+
+# TODO
+# @main_router.callback_query(F.data == "change_id")
+# async def change_user_id(callback: CallbackQuery, state: FSMContext) -> None:
+#     await callback.answer("Введите id")
+#     await state.set_state(Text.waiting_user_id)
+
+
 
 # TODO
 @main_router.message(Text.waiting_user_id, F.text)
@@ -101,6 +118,10 @@ async def edit_user_id(message: Message, state: FSMContext) -> None:
 
     :return: None
     """
+
+    # await message.answer(text = "Введите id вашей корпоративной почты / зачетки.\n"
+    #                                             "Например - для p09s3452@voenmeh.ru id будет 52")
+
     user_telegram_id = message.from_user.id
 
     print("функция ожидания ввода id от пользователя")
@@ -142,7 +163,7 @@ async def get_user_profile(callback: CallbackQuery) -> None:
         return
 
     corporate_id, user_group_name = profile
-    await callback.message.answer(text = f"Ваш id : {corporate_id}\nГруппа : {user_group_name}",reply_markup=await profile_menu())
+    await callback.message.edit_text(text = f"Ваш id : {corporate_id}\nГруппа : {user_group_name}",reply_markup=await profile_menu())
 
 
 
