@@ -93,7 +93,7 @@ async def init_db() -> None:
 
     await initialize_groups()
     await initialize_subjects()
-    await initialize_works()
+    # await initialize_works()
 
 # if __name__ == "__main__":
 #     asyncio.run(init_db())
