@@ -5,7 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, user
 
 from database.services import insert_work, check_user_authentication, register_user, check_group, check_user_profile, check_lessons
-from keyboards.inline_keyboard import main_menu, group_menu, item_menu
+from keyboards.inline_keyboard import main_menu, group_menu, item_menu, profile_menu
 
 from pathlib import Path
 import asyncio
@@ -89,6 +89,9 @@ async def output_lesson_menu(callback: CallbackQuery) -> None:
     await callback.message.edit_text(text = "Предметы", reply_markup = await item_menu())
 
 
+@main_router.callback_query(F.data == "main_menu")
+async def output_lesson_menu(callback: CallbackQuery) -> None:
+    await start_message(callback.message)
 
 # TODO
 @main_router.message(Text.waiting_user_id, F.text)
@@ -139,7 +142,7 @@ async def get_user_profile(callback: CallbackQuery) -> None:
         return
 
     corporate_id, user_group_name = profile
-    await callback.message.answer(text = f"Ваш id : {corporate_id}\nГруппа : {user_group_name}")
+    await callback.message.answer(text = f"Ваш id : {corporate_id}\nГруппа : {user_group_name}",reply_markup=await profile_menu())
 
 
 

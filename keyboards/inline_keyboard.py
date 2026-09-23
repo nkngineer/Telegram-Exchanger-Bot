@@ -17,6 +17,7 @@ async def item_menu() -> InlineKeyboardMarkup:
     for subject in subjects:
         ikb.add(InlineKeyboardButton(text = subject.name, callback_data = f"subject_{subject.id}"))
 
+    ikb.add(InlineKeyboardButton(text="Назад",callback_data = "main_menu"))
     ikb.adjust(1)
     return ikb.as_markup()
 
@@ -26,7 +27,15 @@ async def group_menu() -> InlineKeyboardMarkup:
     groups = await get_groups()
     ikb = InlineKeyboardBuilder()
     for group in groups:
-        ikb.add(InlineKeyboardButton(text = group.name, callback_data = f"group_{group.id}"))
+        ikb.add(InlineKeyboardButton(text = group.name, callback_data = f"{group.name}"))
 
+
+    ikb.adjust(1)
+    return ikb.as_markup()
+
+
+async def profile_menu() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardBuilder()
+    ikb.add(InlineKeyboardButton(text="Назад",callback_data = "main_menu"))
     ikb.adjust(1)
     return ikb.as_markup()
