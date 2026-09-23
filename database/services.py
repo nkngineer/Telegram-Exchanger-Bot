@@ -146,6 +146,7 @@ async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
 
 
 
+# TODO
 async def insert_work(subject_id: int, file_path: Path) -> None:
     """
     Inserts new work as BLOB using document_to_binary()
