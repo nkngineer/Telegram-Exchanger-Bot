@@ -20,6 +20,13 @@ class SubjectNames(StrEnum):
     third_project = "ОСНОВЫ СТАНД. и СЕРТ."
 
 
+
+class WorkNames(StrEnum):
+    first_work = "УП 1"
+    second_work = "УП 2"
+    third_work = "УП 3"
+
+
 class Base(DeclarativeBase):
     pass
 
@@ -56,6 +63,26 @@ async def initialize_subjects() -> None:
 
 
 
+async def initialize_works() -> None:
+    from database.models import Work
+    async with SessionLocal() as session:
+        for name in WorkNames:
+            stmt = select(exists().where(Work.name == name))
+            is_exists = await session.scalar(stmt)
+            if is_exists:
+                continue
+            work = Work(name=name)
+            session.add(work)
+        await session.commit()
+
+
+# TODO
+# async def initialize_tasks() -> None:
+#     from database.models import Task
+#     async with SessionLocal() as session:
+#         pass
+
+
 engine = create_async_engine("sqlite+aiosqlite:///file_exchanger.db")
 SessionLocal = async_sessionmaker(bind = engine,class_ = AsyncSession, expire_on_commit = False, autoflush = False)
 
@@ -66,6 +93,7 @@ async def init_db() -> None:
 
     await initialize_groups()
     await initialize_subjects()
+    await initialize_works()
 
 # if __name__ == "__main__":
 #     asyncio.run(init_db())
