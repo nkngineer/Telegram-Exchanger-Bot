@@ -191,9 +191,9 @@ async def upload_file_from_user(message: Message, state: FSMContext) -> None:
     :note: Calls add_work(), that converts document into binary form and insert it into the database.
 
     """
-    file = await bot.get_file(message.document.file_id)
-    file_path = Path("../fromtg") / message.document.file_name
-    await bot.download_file(file.file_path, destination = file_path)
+    file = await message.bot.get_file(message.document.file_id)
+    file_path = Path(__file__).resolve().parent.parent / message.document.file_name
+    await message.bot.download_file(file.file_path, destination = file_path)
     await asyncio.sleep(3)
 
     await insert_work(subject_id = 1, file_path = file_path)
