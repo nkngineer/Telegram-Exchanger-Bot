@@ -4,8 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, user
 
-from database.services import insert_work, check_user_authentication, register_user, check_group, check_user_profile, check_lessons
-from keyboards.inline_keyboard import main_menu, group_menu, item_menu, profile_menu
+from database.services import insert_work, check_user_authentication, register_user, check_group, check_user_profile, \
+    check_lessons, get_works_by_subject_id
+from keyboards.inline_keyboard import main_menu, group_menu, item_menu, profile_menu, works_menu
 
 from pathlib import Path
 import asyncio
@@ -169,7 +170,20 @@ async def get_user_profile(callback: CallbackQuery) -> None:
 
 
 # TODO
-@main_router.message(Command("get_file"))
+@main_router.callback_query(F.data.startswith("subject_"))
+async def get_subject_works(callback : CallbackQuery) -> None:
+    await callback.answer()
+    subject_id : int = int(callback.data.split("_")[-1])
+    print("get_works_by_subject_id работает")
+    works = await get_works_by_subject_id(subject_id)
+    print("get_works_by_subject_id отработала")
+    await callback.message.edit_text(text="Список работ", reply_markup = await works_menu(works))
+    # await works_menu # это IKB
+
+
+
+# TODO: переделать под F.data == "get_file"
+@main_router.message(F.data == "get_file")
 async def cmd_upload(message: Message, state: FSMContext) -> None:
     """
     Prompt the user to send a file and enter the file-upload FSM state.
@@ -178,6 +192,17 @@ async def cmd_upload(message: Message, state: FSMContext) -> None:
     """
     await message.answer("Отправьте файл")
     await state.set_state(Upload.waiting_file)
+
+
+# @main_router.message(Command("get_file"))
+# async def cmd_upload(message: Message, state: FSMContext) -> None:
+#     """
+#     Prompt the user to send a file and enter the file-upload FSM state.
+#
+#     :return: None
+#     """
+#     await message.answer("Отправьте файл")
+#     await state.set_state(Upload.waiting_file)
 
 
 
