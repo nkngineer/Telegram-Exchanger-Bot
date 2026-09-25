@@ -1,10 +1,10 @@
 import asyncio
-
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import select, exists
-
+import datetime
 from enum import StrEnum
+
+from sqlalchemy import exists, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 
 class GroupNames(StrEnum):
@@ -20,7 +20,6 @@ class SubjectNames(StrEnum):
     third_project = "ОСНОВЫ СТАНД. и СЕРТ."
 
 
-
 class WorkNames(StrEnum):
     first_work = "УП 1"
     second_work = "УП 2"
@@ -31,13 +30,13 @@ class Base(DeclarativeBase):
     pass
 
 
-
 async def initialize_groups() -> None:
     """
     Initialize groups in the database with missing rows from GroupNames
     :return: None
     """
     from database.models import Group
+
     async with SessionLocal() as session:
         for name in GroupNames:
             stmt = select(exists().where(Group.name == name))
@@ -51,6 +50,7 @@ async def initialize_groups() -> None:
 
 async def initialize_subjects() -> None:
     from database.models import Subject
+
     async with SessionLocal() as session:
         for name in SubjectNames:
             stmt = select(exists().where(Subject.name == name))
@@ -62,29 +62,57 @@ async def initialize_subjects() -> None:
         await session.commit()
 
 
-
 async def initialize_works() -> None:
     from database.models import Work
     async with SessionLocal() as session:
-        for name in WorkNames:
-            stmt = select(exists().where(Work.name == name))
+        for title in WorkNames:
+            stmt = select(exists().where(Work.title == title))
             is_exists = await session.scalar(stmt)
             if is_exists:
                 continue
-            work = Work(name=name)
+            work = Work(title=title)
             session.add(work)
         await session.commit()
 
 
 # TODO
-# async def initialize_tasks() -> None:
-#     from database.models import Task
-#     async with SessionLocal() as session:
-#         pass
+async def initialize_tasks() -> None:
+    from database.models import Work, Group, Task, Subject
+    async with (SessionLocal() as session):
+        groups : list[Group] = list((await session.scalars(
+            select(Group)
+        )).all())
+
+        subjects: list[Subject] = list((await session.scalars(
+            select(Subject)
+        )).all())
+
+        deadline = datetime.datetime(2030, 6, 12)
+        works : list[str] = ["work1", "work2", "work3", "work4", "work5", "work6", "work7"]
+
+        for subject in subjects:
+            for work_name in works:
+                work = Work(title = work_name, subject_id = subject.id , file = None)
+                session.add(work)
+                await session.commit()
+                await session.flush()
+                for group in groups:
+                    session.add(
+                        Task(
+                            work_id = work.id,
+                            group_id = group.id,
+                            ended_at = deadline
+                        )
+                    )
+                await session.commit()
+
+
 
 
 engine = create_async_engine("sqlite+aiosqlite:///file_exchanger.db")
-SessionLocal = async_sessionmaker(bind = engine,class_ = AsyncSession, expire_on_commit = False, autoflush = False)
+SessionLocal = async_sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+)
 
 
 async def init_db() -> None:
@@ -93,8 +121,10 @@ async def init_db() -> None:
 
     await initialize_groups()
     await initialize_subjects()
-    # await initialize_works()
-    # await initialize_tasks()
+
+    await initialize_works()
+    await initialize_tasks()
+
 
 # if __name__ == "__main__":
 #     asyncio.run(init_db())
