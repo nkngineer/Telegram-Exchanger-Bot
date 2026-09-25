@@ -62,23 +62,23 @@ async def initialize_subjects() -> None:
         await session.commit()
 
 
-async def initialize_works() -> None:
-    from database.models import Work
-    async with SessionLocal() as session:
-        for title in WorkNames:
-            stmt = select(exists().where(Work.title == title))
-            is_exists = await session.scalar(stmt)
-            if is_exists:
-                continue
-            work = Work(title=title)
-            session.add(work)
-        await session.commit()
+# async def initialize_works() -> None:
+#     from database.models import Work
+#     async with SessionLocal() as session:
+#         for title in WorkNames:
+#             stmt = select(exists().where(Work.title == title))
+#             is_exists = await session.scalar(stmt)
+#             if is_exists:
+#                 continue
+#             work = Work(title=title)
+#             session.add(work)
+#         await session.commit()
 
 
 # TODO
 async def initialize_tasks() -> None:
     from database.models import Work, Group, Task, Subject
-    async with (SessionLocal() as session):
+    async with SessionLocal() as session:
         groups : list[Group] = list((await session.scalars(
             select(Group)
         )).all())
@@ -90,11 +90,13 @@ async def initialize_tasks() -> None:
         deadline = datetime.datetime(2030, 6, 12)
         works : list[str] = ["work1", "work2", "work3", "work4", "work5", "work6", "work7"]
 
-        for subject in subjects:
-            for work_name in works:
-                work = Work(title = work_name, subject_id = subject.id , file = None)
+        for work_name in works:
+            for subject in subjects:
+                is_work_exists = (await session.execute(select(Work.id).where(Work.title == work_name, Work.subject_id == subject.id))).scalar()
+                if is_work_exists:
+                    continue
+                work = Work(title = work_name, description = "trolala", subject_id = subject.id , file = None)
                 session.add(work)
-                await session.commit()
                 await session.flush()
                 for group in groups:
                     session.add(
@@ -104,7 +106,7 @@ async def initialize_tasks() -> None:
                             ended_at = deadline
                         )
                     )
-                await session.commit()
+        await session.commit()
 
 
 
@@ -122,7 +124,7 @@ async def init_db() -> None:
     await initialize_groups()
     await initialize_subjects()
 
-    await initialize_works()
+    # await initialize_works()
     await initialize_tasks()
 
 
