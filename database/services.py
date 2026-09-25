@@ -4,6 +4,20 @@ from pathlib import Path
 from sqlalchemy import select, exists, Row
 
 
+# TODO
+async def get_works_by_subject_id(subject_id : int) -> list[str]:
+    from database.models import Work
+    async with SessionLocal() as session:
+        work_titles : list[str] = (await session.scalars(
+            select(
+                Work.title
+            ).where(
+                Work.subject_id == subject_id
+            )
+        )).all()
+        return work_titles
+
+
 async def document_to_binary(file_path : Path) -> bytes:
     """
     Load a file into a memory as bytes.
@@ -55,9 +69,9 @@ async def check_user_profile(telegram_id: int) -> tuple[int,str] | None:
 
 
 
-async def get_subjects() -> list[Row[tuple[int, str]]]:
+async def get_subjects() -> list[tuple[int, str]]:
     async with SessionLocal() as session:
-        stmt = select(Subject.id, Subject.name).order_by(Subject.name)
+        stmt = select(Subject.id, Subject.name)
         return (await session.execute(stmt)).all()
 
 
