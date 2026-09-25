@@ -12,6 +12,7 @@ class Work(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
+    description: Mapped[str] = mapped_column(nullable = True)
     subject_id: Mapped[int] = mapped_column(ForeignKey("subject.id"), nullable = True)
     file: Mapped[bytes] = mapped_column(LargeBinary, deferred = True, nullable = True)
 
