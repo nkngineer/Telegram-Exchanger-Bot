@@ -21,7 +21,6 @@ if TG_API_TOKEN:
 else:
     raise ValueError("TG_API_TOKEN is not found")
 
-
 dp = Dispatcher()
 dp.include_router(main_router)
 
