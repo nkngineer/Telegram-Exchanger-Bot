@@ -42,10 +42,21 @@ async def profile_menu() -> InlineKeyboardMarkup:
     return ikb.as_markup()
 
 
-async def works_menu(works : list[str]) -> InlineKeyboardMarkup:
+async def tasks_menu(task_ids : list[int], work_titles: list[str]) -> InlineKeyboardMarkup:
+    tasks : list[list[int,str]] = list(zip(task_ids, work_titles))
     ikb = InlineKeyboardBuilder()
-    for work in works:
-        # ikb.add(InlineKeyboardButton(text = work,callback_data = f"work_{work}")) # мб по work_id потом сделать
-        ikb.add(InlineKeyboardButton(text = work,callback_data = f"get_file"))
+    for task in tasks:
+        ikb.add(InlineKeyboardButton(text = task[1],callback_data = f"task_{task[0]}"))
+
+    ikb.add(InlineKeyboardButton(text="Назад",callback_data = "main_menu"))
     ikb.adjust(1)
+    return ikb.as_markup()
+
+
+async def download_menu(subject_id : int) -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardBuilder()
+    ikb.add(InlineKeyboardButton(text = "Загрузить работу", callback_data = f"get_file"))
+    ikb.add(InlineKeyboardButton(text = "Отмена", callback_data = f"subject_{subject_id}"))
+    ikb.adjust(1)
+
     return ikb.as_markup()
