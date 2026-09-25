@@ -40,3 +40,12 @@ async def profile_menu() -> InlineKeyboardMarkup:
     ikb.add(InlineKeyboardButton(text="Назад",callback_data = "main_menu"))
     ikb.adjust(1)
     return ikb.as_markup()
+
+
+async def works_menu(works : list[str]) -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardBuilder()
+    for work in works:
+        # ikb.add(InlineKeyboardButton(text = work,callback_data = f"work_{work}")) # мб по work_id потом сделать
+        ikb.add(InlineKeyboardButton(text = work,callback_data = f"get_file"))
+    ikb.adjust(1)
+    return ikb.as_markup()
