@@ -1,12 +1,13 @@
+from asyncio import tasks
+
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, user
 
-from database.services import insert_work, check_user_authentication, register_user, check_group, check_user_profile, \
-    check_lessons, get_works_by_subject_id
-from keyboards.inline_keyboard import main_menu, group_menu, item_menu, profile_menu, works_menu
+from database.services import insert_work, check_user_authentication, register_user, check_group, check_user_profile, get_task_names_by_subject_id, get_task_data_by_task_id
+from keyboards.inline_keyboard import main_menu, group_menu, item_menu, profile_menu, tasks_menu, download_menu
 
 from pathlib import Path
 import asyncio
@@ -17,6 +18,7 @@ class Upload(StatesGroup):
     """
     FSM states for receiving file uploads from the user
     """
+    waiting_subject_id = State()
     waiting_file = State()
 
 
@@ -26,7 +28,7 @@ class Text(StatesGroup):
     """
     waiting_user_group = State()
     waiting_user_id = State()
-
+    waiting_user_password = State()
 
 main_router = Router()
 
@@ -138,11 +140,33 @@ async def edit_user_id(message: Message, state: FSMContext) -> None:
     await message.answer("id записан. ")
 
     await state.clear()
+    # await state.set_state(Text.waiting_user_password)
 
     if await check_user_authentication(user_telegram_id):
         await start_message(message)
 
 
+# TODO: future
+# @main_router.message(Text.waiting_user_password, F.text)
+# async def edit_user_id(message: Message, state: FSMContext) -> None:
+#     # await message.answer(text = "Введите id вашей корпоративной почты / зачетки.\n"
+#     #                                             "Например - для p09s3452@voenmeh.ru id будет 52")
+#
+#     user_telegram_id = message.from_user.id
+#
+#     user_password : int = int(message.text)
+#     # await check_user_password(user_password)
+#
+#
+#
+#     # await register_user(user_telegram_id, corporate_id, group_name, user_password)
+#
+#     # await message.answer("пользователь зарегистрирован. ")
+#
+#     # await state.clear()
+#
+#     # if await check_user_authentication(user_telegram_id):
+#     #     await start_message(message)
 
 
 
@@ -169,28 +193,47 @@ async def get_user_profile(callback: CallbackQuery) -> None:
 
 
 
-# TODO
 @main_router.callback_query(F.data.startswith("subject_"))
-async def get_subject_works(callback : CallbackQuery) -> None:
+async def get_subject_tasks(callback : CallbackQuery, state : FSMContext) -> None:
     await callback.answer()
     subject_id : int = int(callback.data.split("_")[-1])
-    print("get_works_by_subject_id работает")
-    works = await get_works_by_subject_id(subject_id)
-    print("get_works_by_subject_id отработала")
-    await callback.message.edit_text(text="Список работ", reply_markup = await works_menu(works))
-    # await works_menu # это IKB
+    user_telegram_id : int = callback.from_user.id
+
+    tasks_id, work_titles = zip(*await get_task_names_by_subject_id(subject_id, user_telegram_id))
+
+
+    await state.update_data(waiting_subject_id = subject_id)
+
+    await callback.message.edit_text(text="Список работ", reply_markup = await tasks_menu(tasks_id, work_titles))
+
+
+@main_router.callback_query(F.data.startswith("task_"))
+async def get_tasks_data(callback : CallbackQuery, state : FSMContext) -> None:
+    await callback.answer()
+    state_data: dict[str, int] = await state.get_data()
+    subject_id: int = state_data.get("waiting_subject_id")
+    task_id : int = int(callback.data.split("_")[-1])
+    telegram_id : int = callback.from_user.id
+    task_description, task_starts_at, task_ends_at = zip(*await get_task_data_by_task_id(task_id, subject_id, telegram_id))
+
+
+    # TODO: сделать функцию вывода описания каждой из работ
+    await callback.message.edit_text(text=f"Описание: {task_description}\n"
+                                          f"Начало: {task_starts_at}\n"
+                                          f"Конец: {task_ends_at}", reply_markup = await download_menu(subject_id))
 
 
 
-# TODO: переделать под F.data == "get_file"
-@main_router.message(F.data == "get_file")
-async def cmd_upload(message: Message, state: FSMContext) -> None:
+@main_router.callback_query(F.data == "get_file")
+async def cmd_upload(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Prompt the user to send a file and enter the file-upload FSM state.
 
     :return: None
     """
-    await message.answer("Отправьте файл")
+
+    await callback.message.delete()
+    await callback.message.answer(text = "Отправьте файл")
     await state.set_state(Upload.waiting_file)
 
 
@@ -217,13 +260,14 @@ async def upload_file_from_user(message: Message, state: FSMContext) -> None:
 
     """
     file = await message.bot.get_file(message.document.file_id)
-    file_path = Path(__file__).resolve().parent.parent / message.document.file_name
+    file_path = Path(__file__).resolve().parent.parent / "fromtg" / message.document.file_name
     await message.bot.download_file(file.file_path, destination = file_path)
     await asyncio.sleep(3)
 
-    await insert_work(subject_id = 1, file_path = file_path)
+    # TODO: subject id из State
+    await insert_work(title = message.document.file_name, subject_id = 1, file_path = file_path)
 
     await state.clear()
-    await message.answer("Файл получен")
-
+    await message.answer("Файл загружен")
+    await start_message(message)
 
