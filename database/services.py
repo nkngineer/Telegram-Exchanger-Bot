@@ -4,18 +4,48 @@ from pathlib import Path
 from sqlalchemy import select, exists, Row
 
 
-# TODO
-async def get_works_by_subject_id(subject_id : int) -> list[str]:
-    from database.models import Work
+async def get_user_group_by_telegram_id(telegram_id: int):
     async with SessionLocal() as session:
-        work_titles : list[str] = (await session.scalars(
+        result = await session.execute(
+            select(Student.group_id)
+            .where(Student.telegram_id == telegram_id)
+        )
+        return result.scalar()
+
+
+async def get_task_names_by_subject_id(subject_id : int, telegram_id : int):
+    from database.models import Task, Work
+
+    group_id = await get_user_group_by_telegram_id(telegram_id)
+
+    async with SessionLocal() as session:
+        task_names = (await session.execute(
             select(
-                Work.title
+                Task.id, Work.title
+            ).join(
+                Work
             ).where(
-                Work.subject_id == subject_id
+                Work.subject_id == subject_id, Task.group_id == group_id
             )
         )).all()
-        return work_titles
+        return task_names
+
+
+# TODO!
+async def get_task_data_by_task_id(task_id : int, subject_id : int, telegram_id : int):
+    from database.models import Task
+    group_id = await get_user_group_by_telegram_id(telegram_id)
+    async with SessionLocal() as session:
+        tasks_data = (await session.execute(
+            select(
+                Work.description, Task.starts_at, Task.ended_at
+            ).join(
+                Work
+            ).where(
+                Work.subject_id == subject_id, Task.id == task_id, Task.group_id == group_id
+            )
+        )).all()
+        return tasks_data
 
 
 async def document_to_binary(file_path : Path) -> bytes:
@@ -160,7 +190,7 @@ async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
 
 
 
-async def insert_work(subject_id: int, file_path: Path) -> None:
+async def insert_work(title: str, subject_id: int, file_path: Path) -> None:
     """
     Inserts new work as BLOB using document_to_binary()
     :param subject_id:
@@ -170,7 +200,7 @@ async def insert_work(subject_id: int, file_path: Path) -> None:
     """
     data = await document_to_binary(file_path)
     async with SessionLocal() as session:
-        work = Work(subject_id = subject_id, file = data)
+        work = Work(title = title, subject_id = subject_id, file = data)
         session.add(work)
         await session.commit()
 
