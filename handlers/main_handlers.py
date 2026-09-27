@@ -78,8 +78,7 @@ async def authentication_user(message: Message, state: FSMContext) -> None:
     await start_message(message)
 
 
-
-@main_router.callback_query(Text.waiting_user_group,F.data)
+@main_router.callback_query(Text.waiting_user_group, F.data)
 async def edit_user_group(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Validate the selected group and advance the user to the corporate ID step.
@@ -90,15 +89,17 @@ async def edit_user_group(callback: CallbackQuery, state: FSMContext) -> None:
     :return: None
     """
     is_group_exist = await check_group(callback.data)
-    if not is_group_exist: await callback.answer(text = "Такой группы нет!")
+    if not is_group_exist:
+        await callback.answer(text="Такой группы нет!")
     else:
-        await callback.message.edit_text(text = f"Группа {callback.data} выбрана!")
+        await callback.message.edit_text(text=f"Группа {callback.data} выбрана!")
 
-        await state.update_data(waiting_user_group = callback.data)
+        await state.update_data(waiting_user_group=callback.data)
 
-
-        await callback.message.answer(text = "Введите id вашей корпоративной почты / зачетки.\n"
-                                                "Например - для p09s3452@voenmeh.ru id будет 52")
+        await callback.message.answer(
+            text="Введите id вашей корпоративной почты / зачетки.\n"
+            "Например - для p09s3452@voenmeh.ru id будет 52"
+        )
         await state.set_state(Text.waiting_user_id)
 
         # await edit_user_id(callback.message, state)
