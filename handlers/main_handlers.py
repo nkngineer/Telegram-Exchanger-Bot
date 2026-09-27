@@ -232,6 +232,8 @@ async def get_tasks_data(callback: CallbackQuery, state: FSMContext) -> None:
         reply_markup=await download_menu(subject_id),
     )
 
+    await state.update_data(waiting_task_id=task_id)
+    await state.update_data(waiting_user_id=user_telegram_id)
 
 
 @main_router.callback_query(F.data == "get_file")
