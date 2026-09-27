@@ -198,17 +198,20 @@ async def get_user_profile(callback: CallbackQuery) -> None:
 
 
 @main_router.callback_query(F.data.startswith("subject_"))
-async def get_subject_tasks(callback : CallbackQuery, state : FSMContext) -> None:
+async def get_subject_tasks(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
-    subject_id : int = int(callback.data.split("_")[-1])
-    user_telegram_id : int = callback.from_user.id
+    subject_id: int = int(callback.data.split("_")[-1])
+    user_telegram_id: int = callback.from_user.id
 
-    tasks_id, work_titles = zip(*await get_task_names_by_subject_id(subject_id, user_telegram_id))
+    tasks_id, work_titles = zip(
+        *await get_task_names_by_subject_id(subject_id, user_telegram_id)
+    )
 
+    await state.update_data(waiting_subject_id=subject_id)
 
-    await state.update_data(waiting_subject_id = subject_id)
-
-    await callback.message.edit_text(text="Список работ", reply_markup = await tasks_menu(tasks_id, work_titles))
+    await callback.message.edit_text(
+        text="Список работ", reply_markup=await tasks_menu(tasks_id, work_titles)
+    )
 
 
 @main_router.callback_query(F.data.startswith("task_"))
