@@ -51,14 +51,7 @@ async def start_message(message: Message) -> None:
     """
     Handle the start message and show the main menu
     """
-    await message.answer(text = "Бот по загрузке лаб", reply_markup = main_menu())
-
-
-async def edit_start_message(message: Message) -> None:
-    """
-    Handle the start message and show the main menu
-    """
-    await message.edit_text(text = "Бот по загрузке лаб", reply_markup = main_menu())
+    await message.answer(text="Бот по загрузке лаб", reply_markup=await main_menu())
 
 
 @main_router.message(CommandStart())
