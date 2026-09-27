@@ -201,6 +201,7 @@ async def insert_work(user_telegram_id: int, task_id: int, file_path: Path) -> N
     :note: Calls document_to_binary(), which returns bytes of the file at ``file_path``
     """
     data = await document_to_binary(file_path)
+    student_id = await get_student_id_by_telegram_id(user_telegram_id)
     async with SessionLocal() as session:
         work = Work(title = title, subject_id = subject_id, file = data)
         session.add(work)
