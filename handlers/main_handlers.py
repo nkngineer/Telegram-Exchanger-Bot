@@ -219,9 +219,11 @@ async def get_tasks_data(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
     state_data: dict[str, int] = await state.get_data()
     subject_id: int = state_data.get("waiting_subject_id")
-    task_id : int = int(callback.data.split("_")[-1])
-    telegram_id : int = callback.from_user.id
-    task_description, task_starts_at, task_ends_at = zip(*await get_task_data_by_task_id(task_id, subject_id, telegram_id))
+    task_id: int = int(callback.data.split("_")[-1])
+    user_telegram_id: int = callback.from_user.id
+    task_description, task_starts_at, task_ends_at = zip(
+        *await get_task_data_by_task_id(task_id, subject_id, user_telegram_id)
+    )
 
 
     # TODO: сделать функцию вывода описания каждой из работ
