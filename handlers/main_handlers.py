@@ -105,10 +105,9 @@ async def edit_user_group(callback: CallbackQuery, state: FSMContext) -> None:
         # await edit_user_id(callback.message, state)
 
 
-
 @main_router.callback_query(F.data == "lesson_menu")
 async def output_lesson_menu(callback: CallbackQuery) -> None:
-    await callback.message.edit_text(text = "Предметы", reply_markup = await item_menu())
+    await callback.message.edit_text(text="Предметы", reply_markup=await item_menu())
 
 
 @main_router.callback_query(F.data == "main_menu")
