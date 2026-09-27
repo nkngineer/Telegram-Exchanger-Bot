@@ -272,8 +272,10 @@ async def upload_file_from_user(message: Message, state: FSMContext) -> None:
 
     """
     file = await message.bot.get_file(message.document.file_id)
-    file_path = Path(__file__).resolve().parent.parent / "fromtg" / message.document.file_name
-    await message.bot.download_file(file.file_path, destination = file_path)
+    file_path = (
+        Path(__file__).resolve().parent.parent / "fromtg" / message.document.file_name
+    )
+    await message.bot.download_file(file.file_path, destination=file_path)
     await asyncio.sleep(3)
 
     # TODO: subject id из State
