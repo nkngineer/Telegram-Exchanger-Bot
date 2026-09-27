@@ -112,8 +112,7 @@ async def output_lesson_menu(callback: CallbackQuery) -> None:
 
 @main_router.callback_query(F.data == "main_menu")
 async def output_lesson_menu(callback: CallbackQuery) -> None:
-    await edit_start_message(callback.message)
-
+    await start_message(callback.message)
 
 
 # TODO
