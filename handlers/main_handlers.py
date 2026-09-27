@@ -278,10 +278,13 @@ async def upload_file_from_user(message: Message, state: FSMContext) -> None:
     await message.bot.download_file(file.file_path, destination=file_path)
     await asyncio.sleep(3)
 
-    # TODO: subject id из State
-    await insert_work(title = message.document.file_name, subject_id = 1, file_path = file_path)
+    task_data: dict[str, int] = await state.get_data()
+    task_id: int = task_data.get("waiting_task_id")
+    user_telegram_id: int = task_data.get("waiting_user_id")
+    await insert_work(
+        user_telegram_id=user_telegram_id, task_id=task_id, file_path=file_path
+    )
 
     await state.clear()
     await message.answer("Файл загружен")
     await start_message(message)
-
