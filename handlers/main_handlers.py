@@ -185,15 +185,16 @@ async def get_user_profile(callback: CallbackQuery) -> None:
     :note: Calls check_user_profile(), which returns Student.id and Student group name.
     """
     telegram_id = callback.from_user.id
-    profile  = await check_user_profile(telegram_id)
+    profile = await check_user_profile(telegram_id)
     if not profile:
-        await callback.message.answer(text = "Профиль не найден!")
+        await callback.message.answer(text="Профиль не найден!")
         return
 
     corporate_id, user_group_name = profile
-    await callback.message.edit_text(text = f"Ваш id : {corporate_id}\nГруппа : {user_group_name}",reply_markup=await profile_menu())
-
-
+    await callback.message.edit_text(
+        text=f"Ваш id : {corporate_id}\nГруппа : {user_group_name}",
+        reply_markup=await profile_menu(),
+    )
 
 
 @main_router.callback_query(F.data.startswith("subject_"))
