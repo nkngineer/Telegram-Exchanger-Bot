@@ -65,9 +65,13 @@ async def authentication_user(message: Message, state: FSMContext) -> None:
     telegram_user_id = message.from_user.id
 
     is_authorized = await check_user_authentication(telegram_user_id)
-    print(f"Статус авторизации для {telegram_user_id} : {is_authorized}") # Полезный лог
+    print(
+        f"Статус авторизации для {telegram_user_id} : {is_authorized}"
+    )  # Полезный лог
     if not is_authorized:
-        await message.answer(text = "Вы не авторизованы. Выберите группу",reply_markup = await group_menu())
+        await message.answer(
+            text="Вы не авторизованы. Выберите группу", reply_markup=await group_menu()
+        )
         await state.set_state(Text.waiting_user_group)
         return
 
