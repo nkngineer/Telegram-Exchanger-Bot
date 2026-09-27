@@ -113,7 +113,6 @@ async def get_groups() -> list[Row[tuple[int, str]]]:
 
 
 async def get_works(callback_lesson_id : str) -> list[Row[tuple[int, str]]]:
-    # callback_lesson_id: subject_{subject.id}
     async with SessionLocal() as session:
         stmt = select(Work.id, Work.name).order_by(Work.name)
         return (await session.execute(stmt)).all()
