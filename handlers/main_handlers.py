@@ -1,17 +1,29 @@
-from asyncio import tasks
+import asyncio
+from pathlib import Path
 
-from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
+from aiogram import F, Router
+from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message, CallbackQuery, user
+from aiogram.types import CallbackQuery, Message
 
-from database.services import insert_work, check_user_authentication, register_user, check_group, check_user_profile, get_task_names_by_subject_id, get_task_data_by_task_id
-from keyboards.inline_keyboard import main_menu, group_menu, item_menu, profile_menu, tasks_menu, download_menu
-
-from pathlib import Path
-import asyncio
-
+from database.services import (
+    check_group,
+    check_user_authentication,
+    check_user_profile,
+    get_task_data_by_task_id,
+    get_task_names_by_subject_id,
+    insert_work,
+    register_user,
+)
+from keyboards.inline_keyboard import (
+    download_menu,
+    group_menu,
+    item_menu,
+    main_menu,
+    profile_menu,
+    tasks_menu,
+)
 
 
 class Upload(StatesGroup):
