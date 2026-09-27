@@ -122,8 +122,6 @@ async def output_lesson_menu(callback: CallbackQuery) -> None:
 #     await state.set_state(Text.waiting_user_id)
 
 
-
-# TODO
 @main_router.message(Text.waiting_user_id, F.text)
 async def edit_user_id(message: Message, state: FSMContext) -> None:
     """
@@ -175,9 +173,6 @@ async def edit_user_id(message: Message, state: FSMContext) -> None:
 #
 #     # if await check_user_authentication(user_telegram_id):
 #     #     await start_message(message)
-
-
-
 
 
 # TODO: добавить IKB с изменением данных профиля
