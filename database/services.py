@@ -189,6 +189,10 @@ async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
         await session.commit()
 
 
+async def get_student_id_by_telegram_id(user_telegram_id) -> int:
+    async with SessionLocal() as session:
+        stmt = await session.execute(select(Student.id).where(Student.telegram_id == user_telegram_id))
+        return stmt.scalar()
 
 async def insert_work(title: str, subject_id: int, file_path: Path) -> None:
     """
