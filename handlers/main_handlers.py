@@ -215,7 +215,7 @@ async def get_subject_tasks(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @main_router.callback_query(F.data.startswith("task_"))
-async def get_tasks_data(callback : CallbackQuery, state : FSMContext) -> None:
+async def get_tasks_data(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
     state_data: dict[str, int] = await state.get_data()
     subject_id: int = state_data.get("waiting_subject_id")
