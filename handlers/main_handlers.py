@@ -225,11 +225,12 @@ async def get_tasks_data(callback: CallbackQuery, state: FSMContext) -> None:
         *await get_task_data_by_task_id(task_id, subject_id, user_telegram_id)
     )
 
-
-    # TODO: сделать функцию вывода описания каждой из работ
-    await callback.message.edit_text(text=f"Описание: {task_description}\n"
-                                          f"Начало: {task_starts_at}\n"
-                                          f"Конец: {task_ends_at}", reply_markup = await download_menu(subject_id))
+    await callback.message.edit_text(
+        text=f"Описание: {task_description}\n"
+        f"Начало: {task_starts_at}\n"
+        f"Конец: {task_ends_at}",
+        reply_markup=await download_menu(subject_id),
+    )
 
 
 
