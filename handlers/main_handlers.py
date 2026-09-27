@@ -245,7 +245,7 @@ async def cmd_upload(callback: CallbackQuery, state: FSMContext) -> None:
     """
 
     await callback.message.delete()
-    await callback.message.answer(text = "Отправьте файл")
+    await callback.message.answer(text="Отправьте файл")
     await state.set_state(Upload.waiting_file)
 
 
