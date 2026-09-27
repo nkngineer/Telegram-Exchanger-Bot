@@ -19,6 +19,8 @@ class Upload(StatesGroup):
     FSM states for receiving file uploads from the user
     """
     waiting_subject_id = State()
+    waiting_task_id = State()
+    waiting_user_id = State()
     waiting_file = State()
 
 
