@@ -135,15 +135,13 @@ async def edit_user_id(message: Message, state: FSMContext) -> None:
     # await message.answer(text = "Введите id вашей корпоративной почты / зачетки.\n"
     #                                             "Например - для p09s3452@voenmeh.ru id будет 52")
 
-    user_telegram_id = message.from_user.id
+    user_telegram_id: int = message.from_user.id
 
     print("функция ожидания ввода id от пользователя")
-    corporate_id : int = int(message.text)
+    corporate_id: int = int(message.text)
 
-
-
-    state_data : dict[str,int] = await state.get_data()
-    group_name : str = state_data.get("waiting_user_group")
+    state_data: dict[str, int] = await state.get_data()
+    group_name: str = state_data.get("waiting_user_group")
 
     await register_user(user_telegram_id, corporate_id, group_name)
 
