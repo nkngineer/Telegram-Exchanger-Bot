@@ -249,18 +249,6 @@ async def cmd_upload(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(Upload.waiting_file)
 
 
-# @main_router.message(Command("get_file"))
-# async def cmd_upload(message: Message, state: FSMContext) -> None:
-#     """
-#     Prompt the user to send a file and enter the file-upload FSM state.
-#
-#     :return: None
-#     """
-#     await message.answer("Отправьте файл")
-#     await state.set_state(Upload.waiting_file)
-
-
-
 @main_router.message(Upload.waiting_file, F.document)
 async def upload_file_from_user(message: Message, state: FSMContext) -> None:
     """
