@@ -31,7 +31,6 @@ async def get_task_names_by_subject_id(subject_id : int, telegram_id : int):
         return task_names
 
 
-# TODO!
 async def get_task_data_by_task_id(task_id : int, subject_id : int, telegram_id : int):
     from database.models import Task
     group_id = await get_user_group_by_telegram_id(telegram_id)
@@ -113,7 +112,6 @@ async def get_groups() -> list[Row[tuple[int, str]]]:
 
 
 
-# TODO
 async def get_works(callback_lesson_id : str) -> list[Row[tuple[int, str]]]:
     # callback_lesson_id: subject_{subject.id}
     async with SessionLocal() as session:
