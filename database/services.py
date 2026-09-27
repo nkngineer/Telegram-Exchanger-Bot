@@ -1,5 +1,5 @@
 from database.database import SessionLocal
-from database.models import Work, Student, Group, Subject, Task
+from database.models import Work, Student, Group, Subject, StudentTaskCompleted
 from pathlib import Path
 from sqlalchemy import select, exists, Row
 
