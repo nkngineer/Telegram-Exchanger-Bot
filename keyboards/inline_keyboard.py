@@ -2,7 +2,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup, 
 from database.services import get_subjects, get_groups
 
 
-def main_menu() -> InlineKeyboardMarkup:
+async def main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard = [
             [InlineKeyboardButton(text = "Профиль",callback_data = "get_user_profile")],
