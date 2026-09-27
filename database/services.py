@@ -191,7 +191,8 @@ async def get_student_id_by_telegram_id(user_telegram_id) -> int:
         stmt = await session.execute(select(Student.id).where(Student.telegram_id == user_telegram_id))
         return stmt.scalar()
 
-async def insert_work(title: str, subject_id: int, file_path: Path) -> None:
+
+async def insert_work(user_telegram_id: int, task_id: int, file_path: Path) -> None:
     """
     Inserts new work as BLOB using document_to_binary()
     :param subject_id:
