@@ -1,53 +1,55 @@
-from database.database import SessionLocal
-from database.models import Work, Student, Group, Subject, StudentTaskCompleted
 from pathlib import Path
-from sqlalchemy import select, exists, Row
+
+from sqlalchemy import Row, exists, select
+
+from database.database import SessionLocal
+from database.models import Group, Student, StudentTaskCompleted, Subject, Work
 
 
 async def get_user_group_by_telegram_id(telegram_id: int):
     async with SessionLocal() as session:
         result = await session.execute(
-            select(Student.group_id)
-            .where(Student.telegram_id == telegram_id)
+            select(Student.group_id).where(Student.telegram_id == telegram_id)
         )
         return result.scalar()
 
 
-async def get_task_names_by_subject_id(subject_id : int, telegram_id : int):
+async def get_task_names_by_subject_id(subject_id: int, telegram_id: int):
     from database.models import Task, Work
 
     group_id = await get_user_group_by_telegram_id(telegram_id)
 
     async with SessionLocal() as session:
-        task_names = (await session.execute(
-            select(
-                Task.id, Work.title
-            ).join(
-                Work
-            ).where(
-                Work.subject_id == subject_id, Task.group_id == group_id
+        task_names = (
+            await session.execute(
+                select(Task.id, Work.title)
+                .join(Work)
+                .where(Work.subject_id == subject_id, Task.group_id == group_id)
             )
-        )).all()
+        ).all()
         return task_names
 
 
-async def get_task_data_by_task_id(task_id : int, subject_id : int, telegram_id : int):
+async def get_task_data_by_task_id(task_id: int, subject_id: int, telegram_id: int):
     from database.models import Task
+
     group_id = await get_user_group_by_telegram_id(telegram_id)
     async with SessionLocal() as session:
-        tasks_data = (await session.execute(
-            select(
-                Work.description, Task.starts_at, Task.ended_at
-            ).join(
-                Work
-            ).where(
-                Work.subject_id == subject_id, Task.id == task_id, Task.group_id == group_id
+        tasks_data = (
+            await session.execute(
+                select(Work.description, Task.starts_at, Task.ended_at)
+                .join(Work)
+                .where(
+                    Work.subject_id == subject_id,
+                    Task.id == task_id,
+                    Task.group_id == group_id,
+                )
             )
-        )).all()
+        ).all()
         return tasks_data
 
 
-async def document_to_binary(file_path : Path) -> bytes:
+async def document_to_binary(file_path: Path) -> bytes:
     """
     Load a file into a memory as bytes.
 
@@ -70,12 +72,10 @@ async def check_group(group_name: str | None) -> bool:
     if group_name is None:
         return False
     async with SessionLocal() as session:
-        return await session.scalar(
-            select(exists().where(Group.name == group_name))
-        )
+        return await session.scalar(select(exists().where(Group.name == group_name)))
 
 
-async def check_user_profile(telegram_id: int) -> tuple[int,str] | None:
+async def check_user_profile(telegram_id: int) -> tuple[int, str] | None:
     """
     Look up and returns the user data(corporate id and group name)
 
@@ -91,11 +91,9 @@ async def check_user_profile(telegram_id: int) -> tuple[int,str] | None:
         )
 
         result = await session.execute(stmt)
-        user_data : tuple[int,str] = result.tuples().fetchone()
+        user_data: tuple[int, str] = result.tuples().fetchone()
 
         return user_data
-
-
 
 
 async def get_subjects() -> list[tuple[int, str]]:
@@ -104,19 +102,16 @@ async def get_subjects() -> list[tuple[int, str]]:
         return (await session.execute(stmt)).all()
 
 
-
 async def get_groups() -> list[Row[tuple[int, str]]]:
     async with SessionLocal() as session:
         stmt = select(Group.id, Group.name).order_by(Group.name)
         return (await session.execute(stmt)).all()
 
 
-
-async def get_works(callback_lesson_id : str) -> list[Row[tuple[int, str]]]:
+async def get_works(callback_lesson_id: str) -> list[Row[tuple[int, str]]]:
     async with SessionLocal() as session:
         stmt = select(Work.id, Work.name).order_by(Work.name)
         return (await session.execute(stmt)).all()
-
 
 
 async def check_lessons() -> tuple[str, ...]:
@@ -133,12 +128,21 @@ async def check_user_authentication(telegram_id: int) -> bool:
     :return: True if the user exists, False otherwise
     """
     async with SessionLocal() as session:
-        stmt = select(exists().where(Student.telegram_id == telegram_id, Student.group_id.is_not(None), Student.corporate_id.is_not(None))).limit(1)
+        stmt = select(
+            exists().where(
+                Student.telegram_id == telegram_id,
+                Student.group_id.is_not(None),
+                Student.corporate_id.is_not(None),
+            )
+        ).limit(1)
         is_exists = await session.scalar(stmt)
         return is_exists
 
 
-async def register_user(telegram_id : int, corporate_id : int, group_name: str) -> None:
+# TODO: refactor
+async def authentificate_user(
+    telegram_id: int, corporate_id: int, group_name: str
+) -> None:
     """
     Insert a new user with his telegram, corporate id and group name.
     :param telegram_id:
@@ -149,7 +153,9 @@ async def register_user(telegram_id : int, corporate_id : int, group_name: str) 
     and then inserts a ``Student`` row with the resolved group_id
     """
     async with SessionLocal() as session:
-        group_id = await session.scalar(select(Group.id).where(Group.name == group_name))
+        group_id = await session.scalar(
+            select(Group.id).where(Group.name == group_name)
+        )
         stmt = select(Student).where(Student.telegram_id == telegram_id)
         student = await session.scalar(stmt)
 
@@ -157,10 +163,19 @@ async def register_user(telegram_id : int, corporate_id : int, group_name: str) 
             student.corporate_id = corporate_id
             student.group_id = group_id
         else:
-            student = Student(corporate_id = corporate_id, telegram_id = telegram_id, group_id = group_id)
+            student = Student(
+                corporate_id=corporate_id, telegram_id=telegram_id, group_id=group_id
+            )
             session.add(student)
 
         await session.commit()
+
+
+# TODO:
+async def create_user_session(telegram_id: int, student_id: int):
+    from database.models import Session
+
+    ...
 
 
 async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
@@ -177,7 +192,9 @@ async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
         raise ValueError("callback_data cannot be None")
     async with SessionLocal() as session:
         group = await session.scalar(select(Group).where(Group.name == callback_data))
-        user = await session.scalar(select(Student).where(Student.telegram_id == telegram_id))
+        user = await session.scalar(
+            select(Student).where(Student.telegram_id == telegram_id)
+        )
         if group is None:
             raise ValueError(f"Группа {callback_data!r} не найдена")
         if user is None:
@@ -188,7 +205,9 @@ async def set_user_group(callback_data: str | None, telegram_id: int) -> None:
 
 async def get_student_id_by_telegram_id(user_telegram_id) -> int:
     async with SessionLocal() as session:
-        stmt = await session.execute(select(Student.id).where(Student.telegram_id == user_telegram_id))
+        stmt = await session.execute(
+            select(Student.id).where(Student.telegram_id == user_telegram_id)
+        )
         return stmt.scalar()
 
 
@@ -203,7 +222,11 @@ async def insert_work(user_telegram_id: int, task_id: int, file_path: Path) -> N
     data = await document_to_binary(file_path)
     student_id = await get_student_id_by_telegram_id(user_telegram_id)
     async with SessionLocal() as session:
-        work = StudentTaskCompleted(telegram_id = user_telegram_id, task_id = task_id, student_id = student_id, file = data)
+        work = StudentTaskCompleted(
+            telegram_id=user_telegram_id,
+            task_id=task_id,
+            student_id=student_id,
+            file=data,
+        )
         session.add(work)
         await session.commit()
-
