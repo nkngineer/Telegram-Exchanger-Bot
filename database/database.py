@@ -77,38 +77,48 @@ async def initialize_subjects() -> None:
 
 # TODO
 async def initialize_tasks() -> None:
-    from database.models import Work, Group, Task, Subject
-    async with SessionLocal() as session:
-        groups : list[Group] = list((await session.scalars(
-            select(Group)
-        )).all())
+    from database.models import Group, Subject, Task, Work
 
-        subjects: list[Subject] = list((await session.scalars(
-            select(Subject)
-        )).all())
+    async with SessionLocal() as session:
+        groups: list[Group] = list((await session.scalars(select(Group))).all())
+
+        subjects: list[Subject] = list((await session.scalars(select(Subject))).all())
 
         deadline = datetime.datetime(2030, 6, 12)
-        works : list[str] = ["work1", "work2", "work3", "work4", "work5", "work6", "work7"]
+        works: list[str] = [
+            "work1",
+            "work2",
+            "work3",
+            "work4",
+            "work5",
+            "work6",
+            "work7",
+        ]
 
         for work_name in works:
             for subject in subjects:
-                is_work_exists = (await session.execute(select(Work.id).where(Work.title == work_name, Work.subject_id == subject.id))).scalar()
+                is_work_exists = (
+                    await session.execute(
+                        select(Work.id).where(
+                            Work.title == work_name, Work.subject_id == subject.id
+                        )
+                    )
+                ).scalar()
                 if is_work_exists:
                     continue
-                work = Work(title = work_name, description = "trolala", subject_id = subject.id , file = None)
+                work = Work(
+                    title=work_name,
+                    description="trolala",
+                    subject_id=subject.id,
+                    file=None,
+                )
                 session.add(work)
                 await session.flush()
                 for group in groups:
                     session.add(
-                        Task(
-                            work_id = work.id,
-                            group_id = group.id,
-                            ended_at = deadline
-                        )
+                        Task(work_id=work.id, group_id=group.id, ended_at=deadline)
                     )
         await session.commit()
-
-
 
 
 engine = create_async_engine("sqlite+aiosqlite:///file_exchanger.db")
@@ -124,9 +134,5 @@ async def init_db() -> None:
     await initialize_groups()
     await initialize_subjects()
 
-    # await initialize_works()
     await initialize_tasks()
-
-
-# if __name__ == "__main__":
-#     asyncio.run(init_db())
+    # TODO: init users
