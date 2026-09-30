@@ -8,13 +8,13 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from database.services import (
+    authentificate_user,
     check_group,
     check_user_authentication,
     check_user_profile,
     get_task_data_by_task_id,
     get_task_names_by_subject_id,
     insert_work,
-    register_user,
 )
 from keyboards.inline_keyboard import (
     download_menu,
@@ -30,6 +30,7 @@ class Upload(StatesGroup):
     """
     FSM states for receiving file uploads from the user
     """
+
     waiting_subject_id = State()
     waiting_task_id = State()
     waiting_user_id = State()
@@ -40,9 +41,11 @@ class Text(StatesGroup):
     """
     FSM states for creating a Student entity (group + ID)
     """
+
     waiting_user_group = State()
     waiting_user_id = State()
     waiting_user_password = State()
+
 
 main_router = Router()
 
@@ -112,7 +115,7 @@ async def output_lesson_menu(callback: CallbackQuery) -> None:
 
 @main_router.callback_query(F.data == "main_menu")
 async def output_lesson_menu(callback: CallbackQuery) -> None:
-    await start_message(callback.message)
+    await start_message(callback.data)
 
 
 # TODO
@@ -141,7 +144,7 @@ async def edit_user_id(message: Message, state: FSMContext) -> None:
     state_data: dict[str, int] = await state.get_data()
     group_name: str = state_data.get("waiting_user_group")
 
-    await register_user(user_telegram_id, corporate_id, group_name)
+    await authentificate_user(user_telegram_id, corporate_id, group_name)
 
     await message.answer("id записан. ")
 
@@ -175,7 +178,6 @@ async def edit_user_id(message: Message, state: FSMContext) -> None:
 #     #     await start_message(message)
 
 
-# TODO: добавить IKB с изменением данных профиля
 @main_router.callback_query(F.data == "get_user_profile")
 async def get_user_profile(callback: CallbackQuery) -> None:
     """
@@ -234,6 +236,14 @@ async def get_tasks_data(callback: CallbackQuery, state: FSMContext) -> None:
 
     await state.update_data(waiting_task_id=task_id)
     await state.update_data(waiting_user_id=user_telegram_id)
+
+
+# TODO: future. It will be used when user will be able to sign in by login and password
+# @main_router.callback_query(F.data == "sign_out")
+# async def sign_out_handler(callback: CallbackQuery) -> None:
+#     await callback.message.edit_text(
+#         text="Вы вышли из аккаунта.\nДля входа используйте /start"
+#     )
 
 
 @main_router.callback_query(F.data == "get_file")
