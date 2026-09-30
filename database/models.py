@@ -12,9 +12,16 @@ class Work(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
-    description: Mapped[str] = mapped_column(nullable = True)
-    subject_id: Mapped[int] = mapped_column(ForeignKey("subject.id"), nullable = True)
-    file: Mapped[bytes] = mapped_column(LargeBinary, deferred = True, nullable = True)
+    description: Mapped[str] = mapped_column(nullable=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subject.id"), nullable=True)
+    file: Mapped[bytes] = mapped_column(LargeBinary, deferred=True, nullable=True)
+
+
+class Session(Base):
+    __tablename__ = "session"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    telegram_id: Mapped[int] = mapped_column(unique=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("student.id"))
 
 
 class Subject(Base):
@@ -60,4 +67,3 @@ class StudentTaskCompleted(Base):
     student_id: Mapped[int] = mapped_column(ForeignKey("student.id"))
     file: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now())
-
